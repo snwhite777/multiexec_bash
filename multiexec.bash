@@ -232,7 +232,12 @@ else
 fi
     echo "Writing output to directory ${OUT_DIR}"
 
+# Check redis-server status and start it if it's not running
 # Execute the producer.bash script to populate the Redis messaging queue        
+redis-cli ping > /dev/null 2>&1
+if [[ $? -eq 1  ]]; then
+    redis-server --daemonize yes
+fi
 bash ./producer.bash "${HOSTS_FROM}"
 i=0
 while [[ $i -lt $MAX_CHILD ]]; do
@@ -251,3 +256,6 @@ while [[ $i -lt $MAX_CHILD ]]; do
 done
 #Spawned multiple processes of the consumer.bash script
 monitor_processes $MAX_CHILD $TIME_OUT
+
+#Shutdown redis-server
+redis-cli shutdown
